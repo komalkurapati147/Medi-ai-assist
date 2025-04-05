@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Disease Diagnosis</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url("/static/bg-image.jpeg") no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 80px auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 28px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 20px;
+      display: block;
+      color: #34495e;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #27ae60;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #219150;
+    }
+
+    .result, .precautions, .error, .advice {
+      margin-top: 25px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .result {
+      color: #2c3e50;
+      font-weight: bold;
+    }
+
+    .precautions {
+      color: #16a085;
+      font-weight: bold;
+      line-height: 1.8;
+    }
+
+    .advice {
+      color: #e67e22;
+      font-style: italic;
+    }
+
+    .error {
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🧠 AI Disease Diagnosis</h2>
+    <label for="symptoms">Enter your symptoms (comma separated):</label>
+    <textarea id="symptoms" placeholder="e.g., fever, cough, headache"></textarea>
+    <button onclick="predictDisease()">🔍 Predict</button>
+
+    <div id="result" class="result">🩺 Predicted Disease:</div>
+    <div id="precautions" class="precautions">📋 First-Aid Precautions:</div>
+    <div id="advice" class="advice"></div> <!-- 🆕 Doctor Advice section -->
+    <div id="error" class="error"></div>
+  </div>
+
+  <script>
+    async function predictDisease() {
+      const symptomsText = document.getElementById("symptoms").value;
+      const symptomsArray = symptomsText.split(',').map(s => s.trim().toLowerCase());
+
+      const resultDiv = document.getElementById("result");
+      const precautionsDiv = document.getElementById("precautions");
+      const adviceDiv = document.getElementById("advice");
+      const errorDiv = document.getElementById("error");
+
+      resultDiv.innerHTML = "🩺 Predicted Disease:";
+      precautionsDiv.innerHTML = "📋 First-Aid Precautions:";
+      adviceDiv.innerHTML = "";
+      errorDiv.innerHTML = "";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symptoms: symptomsArray })
+        });
+
+        const data = await response.json();
+
+        if (data.prediction) {
+          resultDiv.innerHTML = `🩺 Predicted Disease:<br>${data.prediction}`;
+
+          if (data.precautions && data.precautions.length > 0) {
+            precautionsDiv.innerHTML = `📋 First-Aid Precautions:<br>` +
+              data.precautions.map(p => `✔️ ${p}`).join("<br>");
+          } else {
+            precautionsDiv.innerHTML = "📋 No precautions found.";
+          }
+
+          // 🆕 Doctor advice message
+          adviceDiv.innerHTML = "⚠️ If symptoms persist for more than 3 days, please consult a physician.";
+        } else {
+          errorDiv.innerHTML = "Error: " + data.error;
+        }
+
+      } catch (error) {
+        errorDiv.innerHTML = "An error occurred: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
